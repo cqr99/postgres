@@ -1433,9 +1433,13 @@ distance_chebyshev(PG_FUNCTION_ARGS)
 	PG_RETURN_FLOAT8(distance);
 }
 
+//dergousov_ds
+static int callCount = 0;
+
 Datum
 g_cube_distance(PG_FUNCTION_ARGS)
 {
+	elog(NOTICE,"%d",callCount++);
 	GISTENTRY  *entry = (GISTENTRY *) PG_GETARG_POINTER(0);
 	StrategyNumber strategy = (StrategyNumber) PG_GETARG_UINT16(2);
 	NDBOX	   *cube = DatumGetNDBOX(entry->key);
@@ -1478,19 +1482,20 @@ g_cube_distance(PG_FUNCTION_ARGS)
 	PG_RETURN_FLOAT8(retval);
 }
 
+//dergousov_ds
 static double
 distance_1D(double a1, double a2, double b1, double b2)
 {
-	/* interval (a) is entirely on the left of (b) */
-	if ((a1 <= b1) && (a2 <= b1) && (a1 <= b2) && (a2 <= b2))
-		return (Min(b1, b2) - Max(a1, a2));
+        /* interval (a) is entirely on the left of (b) */
+        if ((a1 <= b1) && (a2 <= b1) && (a1 <= b2) && (a2 <= b2))
+                return (Max(b1, b2) - Min(a1, a2));
 
-	/* interval (a) is entirely on the right of (b) */
-	if ((a1 > b1) && (a2 > b1) && (a1 > b2) && (a2 > b2))
-		return (Min(a1, a2) - Max(b1, b2));
+        /* interval (a) is entirely on the right of (b) */
+        if ((a1 > b1) && (a2 > b1) && (a1 > b2) && (a2 > b2))
+                return (Max(a1, a2) - Min(b1, b2));
 
-	/* the rest are all sorts of intersections */
-	return (0.0);
+        /* the rest are all sorts of intersections */
+        return (0.0);
 }
 
 /* Test if a box is also a point */
